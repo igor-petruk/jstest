@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html ng-app="app">
+<head>
+    <title></title>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet">
+
+    <link href="css/app.css" rel="stylesheet">
+    <link href="css/persona-buttons.css" rel="stylesheet">
+
+    <!--<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>-->
+    <!--<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>-->
+    <script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.4.4/underscore-min.js"></script>
+
+    <script src="https://login.persona.org/include.js"></script>
+
+    <script src="http://www.myersdaily.org/joseph/javascript/md5.js"></script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.1/angular.min.js"></script>
+
+    <script src="js/persona.js"></script>
+    <script src="js/contacts.js"></script>
+    <script src="js/app.js"></script>
+</head>
+<body>
+<div ng-controller="AuthController" ng-init="init()">
+    <nav class="navbar navbar-default navbar-fixed-top navbar-inverse navbar-custom" role="navigation">
+            <a class="navbar-brand" href="#">Contacts List</a>
+
+        <div class="navbar-text pull-right"  ng-show="!loggedIn">
+            <a href="#" class="persona-button blue" id="signin"><span>Login</span></a>
+        </div>
+
+        <div class="navbar-text pull-right"  ng-show="loggedIn">
+            <img ng-src='{{gravatarUrl()+"?s=25"}}'> {{currentUser}}
+            <a id="signout" href="#">logout</a>
+        </div>
+    </nav>
+</div>
+
+<div ng-controller="ContactsController" class="row">
+    <div class="col-md-4">
+        <span ng-show="selectingGroups()">
+            <ol class="breadcrumb">
+                <li class="active">Groups</li>
+            </ol>
+        </span>
+        <span ng-hide="selectingGroups()">
+            <ol class="breadcrumb">
+                <li><a href="" ng-click="groupsListLinkClicked()">Groups</a></li>
+                <li class="active">{{ selectedGroup.title }}</li>
+            </ol>
+        </span>
+
+        <div ng-show="!selectingGroups()">
+            <form role="form">
+                <input type="text" class="form-control" placeholder="Filter" ng-model="searchQuery"/>
+            </form>
+        </div>
+
+
+        <!--<br/>-->
+
+        <div ng-show="selectingGroups()"
+             style="overflow: auto; height: 400px" ng-include src="'groups.html'"> </div>
+
+        <div ng-hide="selectingGroups()"
+             style="overflow: auto; height: 400px" ng-include src="'contacts.html'"> </div>
+
+    </div>
+    <div class="col-md-8">.col-md-1 {{ contacts }}, {{ searchQuery }} </div>
+</div>
+
+</body>
+</html>

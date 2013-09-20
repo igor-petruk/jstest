@@ -1,0 +1,12 @@
+<ul class="nav nav-pills nav-stacked">
+    <li>
+        <a href=""  ng-click="groupItemClicked(null)">
+            <span class="glyphicon glyphicon-star"></span> <b>All groups</b>
+        </a>
+    </li>
+    <li ng-repeat="group in groups">
+        <a href="" ng-click="groupItemClicked(group)">
+            <span class="glyphicon glyphicon-user"></span> {{group.title}}
+        </a>
+    </li>
+</ul>

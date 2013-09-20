@@ -1,0 +1,17 @@
+body{
+    padding: 60px 30px 30px;
+}
+
+.navbar-custom {
+    height: 50px;
+}
+
+div .tiny-side-padding{
+    padding-left: 3px;
+    padding-right: 3px;
+}
+
+div .contact-list-select{
+    padding-left: 18px;
+}
+
