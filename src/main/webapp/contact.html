@@ -75,7 +75,9 @@
 
             <address>
                 <strong>Email</strong><br>
-                <a href="mailto:#">{{ selectedContact.email }}</a>
+                <a href="mailto:{{ selectedContact.email }}">
+                    <span class="glyphicon glyphicon-envelope"></span>
+                    {{ selectedContact.email }}</a>
             </address>
         </div>
     </div>
