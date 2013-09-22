@@ -1,0 +1,108 @@
+<div class="row">
+    <!--<div class="btn-toolbar pull-right">-->
+        <!--<div class="btn-group">-->
+            <!--<button type="button" class="btn btn-default btn-sm dropdown-toggle"  data-toggle="dropdown">-->
+                <!--Move to  <span class="caret"></span>-->
+            <!--</button>-->
+            <!--<button type="button" class="btn btn-default btn-sm">-->
+                <!--<span class="glyphicon glyphicon-edit"></span>-->
+            <!--</button>-->
+            <!--<button type="button" class="btn btn-default btn-sm">-->
+                <!--<span class="glyphicon glyphicon-remove"></span>-->
+            <!--</button>-->
+            <!--<ul class="dropdown-menu" role="menu">-->
+                <!--<li><a href="#">Action</a></li>-->
+                <!--<li><a href="#">Another action</a></li>-->
+                <!--<li><a href="#">Something else here</a></li>-->
+                <!--<li class="divider"></li>-->
+                <!--<li><a href="#">Separated link</a></li>-->
+            <!--</ul>-->
+        <!--</div>-->
+    <!--</div>-->
+
+</div>
+
+<div class="row">
+
+    <div class="col-md-4">
+        <a href="" class="thumbnail">
+            <img ng-src="{{ gravatarUrl(selectedContact.email)+'?s=180' }}" alt="...">
+        </a>
+    </div>
+
+    <div class="col-md-8">
+        <div class="row">
+            <div class="col-md-7">
+                <h2>{{ selectedContact.name }}</h2>
+            </div>
+            <div class="col-md-5">
+                <div class="btn-toolbar pull-right">
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-default dropdown-toggle"  data-toggle="dropdown">
+                            Move to  <span class="caret"></span>
+                        </button>
+                        <button type="button" class="btn btn-default"
+                                data-toggle="modal" data-target="#editContactForm"
+                                ng-click="editContactFormOpen()">
+                            <span class="glyphicon glyphicon-edit"></span>
+                        </button>
+                        <button type="button" class="btn btn-default" ng-click="deleteContact()">
+                            <span class="glyphicon glyphicon-remove"></span>
+                        </button>
+                        <ul class="dropdown-menu" role="menu">
+                            <li>
+                                <a href="" ng-click="moveToGroup(null)">
+                                    <span class="glyphicon glyphicon-ban-circle"></span>
+                                    (no group)
+                                </a>
+                            </li>
+                            <li class="divider"></li>
+                            <li ng-repeat="mg in groups">
+                                <a href="" ng-click="moveToGroup(mg.gid)">
+                                    <span class="glyphicon glyphicon-user"></span>
+                                    {{ mg.title }}
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <address>
+                <abbr title="Phone">P:</abbr> {{ selectedContact.phone }}
+            </address>
+
+            <address>
+                <strong>Email</strong><br>
+                <a href="mailto:#">{{ selectedContact.email }}</a>
+            </address>
+        </div>
+    </div>
+
+</div>
+
+<div class="modal fade" id="editContactForm" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form>
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Edit contact</h4>
+                </div>
+                <div class="modal-body">
+                        <label for="contactNameField">Name</label>
+                        <input class="form-control" type="text" id="contactNameField" ng-model="newContact.name"/>
+                        <label for="contactEmailField">Email</label>
+                        <input class="form-control" type="email" id="contactEmailField" ng-model="newContact.email"/>
+                        <label for="contactPhoneField">Phone</label>
+                        <input class="form-control" type="text" id="contactPhoneField" ng-model="newContact.phone"/>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" ng-click="editContactFormSubmit()">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

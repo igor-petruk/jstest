@@ -1,5 +1,5 @@
 <ul class="nav nav-pills nav-stacked">
     <li ng-repeat="contact in sortedContacts()">
-        <a href=""><img ng-src="{{ gravatarUrl(contact.email)+'?s=25' }}"/>  {{contact.name}} </a>
+        <a href="" ng-click="selectContact(contact)"><img ng-src="{{ gravatarUrl(contact.email)+'?s=25' }}"/>  {{contact.name}} </a>
     </li>
 </ul>

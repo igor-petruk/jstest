@@ -72,6 +72,7 @@ trait CassandraDatabaseServiceComponent extends DatabaseComponentServiceApi with
     }
 
     def query(cql:String, args:AnyRef*)={
+      println(cql, args.toList)
       val preparedQuery = session.prepare(cql)
       val bound = preparedQuery.bind(args:_*)
       val result = session.executeAsync(bound)

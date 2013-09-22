@@ -3,15 +3,64 @@ package com.ipetruk.jstest
 import scala.concurrent._
 import java.util.UUID
 
-case class ContactGroup(gid:String, title:String)
-case class Contact(cid:String, gid:String, name:String, email:String, phone:String)
+case class ContactGroup(gid:Option[String], title:String)
+case class Contact(cid:Option[String], gid:Option[String], name:String, email:Option[String], phone:Option[String])
 
 case class Contacts(groups:List[ContactGroup], contacts: List[Contact])
 
 trait ContactsOperations {
   self:  AppStack with AuthenticationOperations with DatabaseComponentServiceApi =>
 
-  get("/contacts"){
+  delete("/contactsService/groups/:id"){
+    val gid = params("id")
+
+    asyncAuth { session =>
+      for (_ <- databaseServiceApi.query("delete from groups where uid=? and gid=?",
+        session.name, UUID.fromString(gid))) yield { }
+    }
+  }
+
+  post("/contactsService/groups"){
+    val bodyGroup = parsedBody.extract[ContactGroup]
+    val updatedGroup = bodyGroup.copy(
+      gid = Some(bodyGroup.gid.getOrElse(UUID.randomUUID().toString))
+    )
+    asyncAuth { session =>
+      for (_ <- databaseServiceApi.query("insert into groups(uid,gid,group_name) values (?,?,?)",
+        session.name, UUID.fromString(updatedGroup.gid.get), updatedGroup.title)) yield {
+        updatedGroup
+      }
+    }
+  }
+
+  delete("/contactsService/contacts/:id"){
+    val cid = params("id")
+
+    asyncAuth { session =>
+      for (_ <- databaseServiceApi.query("delete from contacts where uid=? and cid=?",
+        session.name, UUID.fromString(cid))) yield { }
+    }
+  }
+
+  post("/contactsService/contacts"){
+    val bodyContact = parsedBody.extract[Contact]
+    val updatedContact = bodyContact.copy(
+      cid = Some(bodyContact.cid.getOrElse(UUID.randomUUID().toString))
+    )
+    import updatedContact._
+    asyncAuth { session =>
+      for (_ <- databaseServiceApi.query(
+        "insert into contacts(uid,cid,email,gid,name,phone) values (?,?,?,?,?,?)",
+        session.name, UUID.fromString(cid.get),
+        email.getOrElse(null), gid.map(s=>UUID.fromString(s)).getOrElse(null),
+        name, phone.getOrElse(null)
+      )) yield {
+        updatedContact
+      }
+    }
+  }
+
+  get("/contactsService/all"){
     contentType = formats("json")
     asyncAuth{ session =>
       val res = for {
@@ -19,11 +68,11 @@ trait ContactsOperations {
         contactsResultSet <- databaseServiceApi.query("select * from contacts where uid=?", session.name)
       } yield {
         val groupsList = groupsResultSet.map{ row=>
-          ContactGroup(row.getUUID("gid").toString, row.getString("group_name"))
+          ContactGroup(Some(row.getUUID("gid").toString), row.getString("group_name"))
         }.toList
         val contactsList = contactsResultSet.map{ row=>
-          Contact(row.getUUID("cid").toString, row.getUUID("gid").toString, row.getString("name"),
-            row.getString("email"),row.getString("email"))
+          Contact(Some(row.getUUID("cid").toString), Option(row.getUUID("gid")).map(_.toString), row.getString("name"),
+            Option(row.getString("email")),Option(row.getString("phone")))
         }.toList
 
         Contacts(

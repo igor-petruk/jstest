@@ -51,15 +51,26 @@ trait AuthenticationOperations {
           }
         }).map(_.flatten.map(Session.apply _))
 
-    sessionFOpt.flatMap{ sessionOpt =>
+    val fResult = sessionFOpt.flatMap{ sessionOpt =>
       println(sessionOpt)
       sessionOpt match {
-        case Some(session) => future(session)
+        case Some(session) => try{
+          future(session)
+        } catch {
+          case e: Exception => {
+            e.printStackTrace()
+            future{
+              halt(500)
+            }
+          }
+        }
         case None => future{
           halt(401, "Unauthenticated")
         }
       }
     }
+
+    fResult
   }
 
   get("/auth/currentUser") {
@@ -94,7 +105,7 @@ trait AuthenticationOperations {
           "https://verifier.login.persona.org/verify",
           Map(
             "assertion"->assertion.value,
-            "audience"->"http://192.168.1.146:8080/"
+            "audience"->"http://localhost:8080/"
           )
         ).flatMap{ response =>
           response match {

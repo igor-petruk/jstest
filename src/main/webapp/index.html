@@ -8,8 +8,8 @@
     <link href="css/app.css" rel="stylesheet">
     <link href="css/persona-buttons.css" rel="stylesheet">
 
-    <!--<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>-->
-    <!--<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>-->
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.4.4/underscore-min.js"></script>
 
     <script src="https://login.persona.org/include.js"></script>
@@ -43,12 +43,18 @@
         <span ng-show="selectingGroups()">
             <ol class="breadcrumb">
                 <li class="active">Groups</li>
+                <a href="" class="pull-right" ng-click="addGroup()"><span class="glyphicon glyphicon-plus"></span>
+                    Add group
+                </a>
             </ol>
         </span>
         <span ng-hide="selectingGroups()">
             <ol class="breadcrumb">
                 <li><a href="" ng-click="groupsListLinkClicked()">Groups</a></li>
                 <li class="active">{{ selectedGroup.title }}</li>
+                <a href="" class="pull-right" ng-click="addContact()"><span class="glyphicon glyphicon-plus"></span>
+                    Add contact
+                </a>
             </ol>
         </span>
 
@@ -68,7 +74,9 @@
              style="overflow: auto; height: 400px" ng-include src="'contacts.html'"> </div>
 
     </div>
-    <div class="col-md-8">.col-md-1 {{ contacts }}, {{ searchQuery }} </div>
+    <div class="col-md-8">
+        <div ng-show="selectedContact" ng-include src="'contact.html'"> </div>
+    </div>
 </div>
 
 </body>

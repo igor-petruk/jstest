@@ -15,3 +15,31 @@ div .contact-list-select{
     padding-left: 18px;
 }
 
+.group-list-item{
+    height: 3em;
+    padding-top: 10px;
+    /*padding-bottom: 20px;*/
+    /*vertical-align: middle !important;*/
+}
+
+.group-list-item:hover {
+    background: #f5f5f5;
+    border-radius: 5px;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+}
+
+.group-list-item a{
+    text-decoration: none;
+}
+
+.group-list-item button.group-list-item-btn{
+    border: none;
+    display: none;
+    color: #428bca;
+}
+
+.group-list-item:hover button.group-list-item-btn{
+    background: #f5f5f5;
+    display: block;
+}

@@ -1,13 +1,18 @@
 /* Controller */
 
-function ContactsController($scope, contacts, $timeout){
+function ContactsController($scope, contacts, $timeout, $http){
     var self = this;
+
+    self.$http = $http;
 
     $scope.selectingGroups = function(){
         return (!$scope.selectedGroup)?true:false;
     };
 
     $scope.searchQuery = "";
+    $scope.newGroup = {};
+
+    $scope.selectedContact = null;
 
     var timer=false;
 
@@ -43,6 +48,88 @@ function ContactsController($scope, contacts, $timeout){
 
     $scope.groupsListLinkClicked = function(){
         $scope.selectedGroup = null;
+        $scope.selectedContact = null;
+    }
+
+    $scope.groupDialogOpen = function(group){
+        $scope.currentGroup = group;
+        $scope.newGroup = {
+            title:group.title
+        };
+    }
+
+    $scope.addGroup = function(){
+        self.$http.post('/rest/contactsService/groups', {title: "New group"}).
+            success(function(data, status, headers) {
+                $scope.groups.push(data);
+            });
+    }
+
+    $scope.editContactFormOpen = function(){
+        $scope.newContact = {
+            cid:$scope.selectedContact.cid,
+            gid:$scope.selectedContact.gid,
+            name:$scope.selectedContact.name,
+            phone:$scope.selectedContact.phone,
+            email:$scope.selectedContact.email
+        }
+    }
+
+    $scope.editContactFormSubmit = function(){
+        self.$http.post('/rest/contactsService/contacts', $scope.newContact).
+            success(function(data, status, headers) {
+                $scope.selectedContact.name = data.name;
+                $scope.selectedContact.email = data.email;
+                $scope.selectedContact.phone = data.phone;
+            });
+        angular.element("#editContactForm").modal('hide');
+    }
+
+
+    $scope.moveToGroup = function(gid){
+        $scope.selectedContact.gid = gid;
+        self.$http.post('/rest/contactsService/contacts', $scope.selectedContact);
+    }
+
+    $scope.deleteContact = function(){
+        contacts.removeContact($scope.selectedContact);
+        self.$http.delete('/rest/contactsService/contacts/'+$scope.selectedContact.cid);
+        $scope.selectedContact = null;
+    }
+
+    $scope.addContact = function(){
+        var selectedGid = null;
+        if ($scope.selectedGroup.gid != "*"){
+            selectedGid = $scope.selectedGroup.gid;
+        }
+        var contact = {
+            name:"New Contact",
+            gid: selectedGid
+        }
+        self.$http.post('/rest/contactsService/contacts', contact).
+            success(function(data, status, headers) {
+                contacts.addContacts([data]);
+                $scope.selectedContact = data;
+            });
+    }
+
+    $scope.removeGroupDialogSubmit = function(){
+        $scope.groups = _.filter($scope.groups, function(i){ return i.gid!=$scope.currentGroup.gid;});
+        angular.element("#removeGroupForm").modal('hide');
+        self.$http.delete('/rest/contactsService/groups/'+$scope.currentGroup.gid);
+    }
+
+    $scope.renameGroupDialogSubmit = function(){
+        $scope.currentGroup.title = $scope.newGroup.title;
+        angular.element("#renameGroupForm").modal('hide');
+        self.$http.post('/rest/contactsService/groups', {
+            gid: $scope.currentGroup.gid,
+            title: $scope.currentGroup.title
+        })
+    }
+
+    $scope.selectContact = function(contact){
+        $scope.selectedContact = contact;
     }
 
     $scope.groupItemClicked = function(item){
@@ -105,30 +192,20 @@ ContactsService.prototype.sortedContacts = function(){
     });
 }
 
+ContactsService.prototype.removeContact = function(contact){
+    var self = this;
+    self.contactList = _.filter(self.contactList, function(i){return i.cid != contact.cid;})
+}
+
 ContactsService.prototype.addContacts = function(contacts){
     var self = this;
 
-    var newList = self.contactList.concat(contacts);
-
     angular.forEach(contacts, function(value){
+        self.removeContact(value);
         self.refreshUpToSearchTerm(value);
     });
 
-    self.contactList = newList;
-
-
-//    angular.forEach(contacts, function(value){
-//        var trigrams = self.getTrigrams(value.name);
-//
-//        angular.forEach(trigrams, function(trigram){
-//            var oci = self.contactIndex[trigram];
-//            var ci = (oci)?oci:[];
-//
-//            ci.push(value);
-//
-//            self.contactIndex[trigram] = ci;
-//        });
-//    });
+    self.contactList = self.contactList.concat(contacts);
 }
 
 ContactsService.prototype.refreshUpToSearchTerm = function(contact){
@@ -162,7 +239,7 @@ ContactsService.prototype.refresh = function(){
     var self = this;
 
     if (self.onRefresh){
-        this.$http.get('/rest/contacts').
+        this.$http.get('/rest/contactsService/all').
             success(function(data, status, headers) {
                 self.addContacts(data.contacts);
                 self.onRefresh({

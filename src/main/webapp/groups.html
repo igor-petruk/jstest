@@ -1,12 +1,70 @@
-<ul class="nav nav-pills nav-stacked">
-    <li>
-        <a href=""  ng-click="groupItemClicked(null)">
-            <span class="glyphicon glyphicon-star"></span> <b>All groups</b>
-        </a>
-    </li>
-    <li ng-repeat="group in groups">
-        <a href="" ng-click="groupItemClicked(group)">
-            <span class="glyphicon glyphicon-user"></span> {{group.title}}
-        </a>
-    </li>
-</ul>
+<div class="container">
+    <div class="row">
+        <div class="group-list-item col-md-12">
+            <a href="" ng-click="groupItemClicked(null)" class="col-md-10">
+                <span class="glyphicon glyphicon-star"></span> All groups
+            </a>
+        </div>
+    </div>
+    <div class="row" ng-repeat="group in groups">
+        <div class="group-list-item col-md-12">
+
+            <a href="" ng-click="groupItemClicked(group)" class="col-md-10">
+                <span class="glyphicon glyphicon-user"></span> {{ group.title }}
+            </a>
+            <span class="col-md-2">
+                <!--<span class="pull-right">-->
+                    <button class="btn btn-default btn-xs group-list-item-btn col-md-6"
+                        data-toggle="modal" data-target="#renameGroupForm"
+                        ng-click="groupDialogOpen(group)">
+                        <span class="glyphicon glyphicon-edit"></span>
+                    </button>
+                    <button class="btn btn-default btn-xs group-list-item-btn col-md-6"
+                            data-toggle="modal" data-target="#removeGroupForm"
+                            ng-click="groupDialogOpen(group)">
+                        <span class="glyphicon glyphicon-remove"></span>
+                    </button>
+                 <!--</span>-->
+            </span>
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="removeGroupForm" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Remove group</h4>
+            </div>
+            <div class="modal-body">
+                <p>You are going to remove group '{{ currentGroup.title }}'. Items will not be removed.</p>
+                <p>Do you want to remove '{{ currentGroup.title }}'? </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" ng-click="removeGroupDialogSubmit()">Remove</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="renameGroupForm" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Rename group {{ currentGroup.title }}</h4>
+            </div>
+            <div class="modal-body">
+                <label for="renameGroupField">New name</label>
+                <input class="form-control" type="text" id="renameGroupField" ng-model="newGroup.title"/>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" ng-click="renameGroupDialogSubmit()">Remove</button>
+            </div>
+        </div>
+    </div>
+</div>
