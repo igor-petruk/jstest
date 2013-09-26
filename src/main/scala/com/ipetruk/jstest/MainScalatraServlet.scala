@@ -3,6 +3,7 @@ package com.ipetruk.jstest
 import java.util.UUID
 
 class MainScalatraServlet extends AppStack
+with CSRFServiceComponent
 with CassandraDatabaseServiceComponent
 with AuthenticationOperations
 with SessionDaoComponent

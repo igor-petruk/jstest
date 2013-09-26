@@ -9,12 +9,15 @@ case class Contact(cid:Option[String], gid:Option[String], name:String, email:Op
 case class Contacts(groups:List[ContactGroup], contacts: List[Contact])
 
 trait ContactsOperations {
-  self:  AppStack with AuthenticationOperations with DatabaseComponentServiceApi =>
+  self:  AppStack
+    with AuthenticationOperations
+    with DatabaseComponentServiceApi
+    with CSRFServiceComponentApi =>
 
   implicit private[this] val executor = ExecutionContext.Implicits.global
 
   delete("/contactsService/groups/:id"){
-    assertCSRF
+    csrfService.assertNoCSRF
 
     val gid = params("id")
 
@@ -25,7 +28,7 @@ trait ContactsOperations {
   }
 
   post("/contactsService/groups"){
-    assertCSRF
+    csrfService.assertNoCSRF
 
     val bodyGroup = parsedBody.extract[ContactGroup]
     val updatedGroup = bodyGroup.copy(
@@ -40,7 +43,7 @@ trait ContactsOperations {
   }
 
   delete("/contactsService/contacts/:id"){
-    assertCSRF
+    csrfService.assertNoCSRF
 
     val cid = params("id")
 
@@ -51,7 +54,7 @@ trait ContactsOperations {
   }
 
   post("/contactsService/contacts"){
-    assertCSRF
+    csrfService.assertNoCSRF
 
     val bodyContact = parsedBody.extract[Contact]
     val updatedContact = bodyContact.copy(
@@ -71,7 +74,7 @@ trait ContactsOperations {
   }
 
   get("/contactsService/all"){
-    assertCSRF
+    csrfService.assertNoCSRF
 
     contentType = formats("json")
     asyncAuth{ session =>

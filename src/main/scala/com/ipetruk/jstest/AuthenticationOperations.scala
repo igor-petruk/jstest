@@ -2,15 +2,12 @@ package com.ipetruk.jstest
 
 import org.json4s.{Extraction, Formats}
 import concurrent.{ExecutionContext, Future, future}
-import dispatch.{Http, as}
-import org.scalatra.{FutureSupport, ScalatraServlet, AsyncResult}
-import org.scalatra.json.JacksonJsonSupport
+import dispatch.{as}
+import org.scalatra.{AsyncResult}
 
 import java.util.UUID
-import javax.servlet.http.Cookie
 import java.security.SecureRandom
 import com.ning.http.util.Base64
-import util.parsing.json.JSON
 import grizzled.slf4j.Logger
 
 case class Assertion(value: String)
@@ -22,35 +19,16 @@ case class ValidationResponse(status: String,
 case class ValidationClientResponse(email: Option[String] = None,error: Option[String] = None)
 
 trait AuthenticationOperations {
-  self:  AppStack with SessionDaoComponentApi =>
+  self:  AppStack with SessionDaoComponentApi with CSRFServiceComponentApi =>
 
   implicit private[this] val executor = ExecutionContext.Implicits.global
   private[this] val logger = Logger(classOf[AuthenticationOperations])
 
-  private val secureRandom = new SecureRandom()
-
-  private val csrfCookieName="XSRF-TOKEN"
-  private val csrfHeaderName="X-XSRF-TOKEN"
   private val sidCookieName="app.sid.cookie"
-
-  def assertCSRF{
-    val matchStatus = for{
-      cookie <- cookies.get(csrfCookieName).map('"'+_+'"');
-      header <- Option(request.getHeader(csrfHeaderName))
-    } yield {
-      cookie == header
-    }
-
-    matchStatus match {
-      case Some(false) => halt(403, reason = "CSRF mismatch")
-      case None => halt(403, reason="No CSRF cookie or header")
-      case Some(true) => {}
-    }
-  }
 
   private def asyncPost[A](url:String, params:Map[String,String])(implicit
                                                           formats: Formats, mf: scala.reflect.Manifest[A]):Future[A]={
-    //logger.debug("Posting "+url+":"+params)
+    logger.debug("Posting "+url+":"+params)
     val f = dispatch.Http((dispatch.url(url).POST << params) OK as.String).map{str=>
       Extraction.extract(readJsonFromBody(str))(formats, mf)}
     for (e<-f.failed){
@@ -60,17 +38,6 @@ trait AuthenticationOperations {
   }
 
   def getSid = cookies.get(sidCookieName)
-
-  def provideCSRFCookieValue = {
-    synchronized{
-      logger.debug("Generating CSRF token...")
-      val bytes = Array.ofDim[Byte](128)
-      secureRandom.nextBytes(bytes)
-      val r = Base64.encode(bytes)
-      logger.debug("Done CSRF: "+r) // Should not be logged in real life
-      r
-    }
-  }
 
   def reverseOption[T](i:Option[Future[T]]):Future[Option[T]]={
     i match {
@@ -116,7 +83,7 @@ trait AuthenticationOperations {
   }
 
   get("/auth/currentUser") {
-    assertCSRF
+    csrfService.assertNoCSRF
 
     contentType = formats("json")
     val cookie = cookies.get(sidCookieName)
@@ -133,7 +100,7 @@ trait AuthenticationOperations {
   }
 
   post("/auth/logout") {
-    assertCSRF
+    csrfService.assertNoCSRF
 
     contentType = formats("json")
     for (sid <- cookies.get(sidCookieName)){
@@ -200,9 +167,8 @@ trait AuthenticationOperations {
                 sessionDao.updateSessionFields(sid, Map(
                   "uid"->newEmail
                 ))
-                val csrfProvided = provideCSRFCookieValue
                 cookies+=(sidCookieName->sid.toString)
-                cookies+=(csrfCookieName->csrfProvided)
+                csrfService.injectCSRFCookie
                 ValidationClientResponse(email = personaResponse.email)
               }
             }
