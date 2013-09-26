@@ -1,12 +1,11 @@
 package com.ipetruk.jstest
 
 import org.json4s.{Extraction, Formats}
-import concurrent.Future
+import concurrent.{ExecutionContext, Future, future}
 import dispatch.{Http, as}
 import org.scalatra.{FutureSupport, ScalatraServlet, AsyncResult}
 import org.scalatra.json.JacksonJsonSupport
 
-import scala.concurrent.future
 import java.util.UUID
 import javax.servlet.http.Cookie
 import java.security.SecureRandom
@@ -25,6 +24,7 @@ case class ValidationClientResponse(email: Option[String] = None,error: Option[S
 trait AuthenticationOperations {
   self:  AppStack with SessionDaoComponentApi =>
 
+  implicit private[this] val executor = ExecutionContext.Implicits.global
   private[this] val logger = Logger(classOf[AuthenticationOperations])
 
   private val secureRandom = new SecureRandom()
@@ -138,15 +138,16 @@ trait AuthenticationOperations {
   post("/auth/validateAssertion"){
     contentType = formats("json")
     val assertion = parsedBody.extract[Assertion]
+    logger.debug("Got assertion "+assertion)
     new AsyncResult {
       val is = {
+        logger.debug("Running async post")
         asyncPost[ValidationResponse](
           "https://verifier.login.persona.org/verify",
           Map(
             "assertion"->assertion.value,
-//            "audience"->"http://146.185.128.148:8080/"
-            "audience"->"http://localhost:8080/"
-//            "audience"->"http://jstest-ipetruk.rhcloud.com/"
+            "audience"->"http://146.185.128.148:8080/"
+//            "audience"->"http://localhost:8080/"
           )
         ).flatMap{ response =>
           logger.debug("Got response"+response)

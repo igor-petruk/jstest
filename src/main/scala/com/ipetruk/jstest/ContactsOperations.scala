@@ -11,6 +11,8 @@ case class Contacts(groups:List[ContactGroup], contacts: List[Contact])
 trait ContactsOperations {
   self:  AppStack with AuthenticationOperations with DatabaseComponentServiceApi =>
 
+  implicit private[this] val executor = ExecutionContext.Implicits.global
+
   delete("/contactsService/groups/:id"){
     assertCSRF
 
