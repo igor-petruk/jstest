@@ -4,6 +4,7 @@ import concurrent.{ExecutionContext, Future}
 import java.util.UUID
 import scala.collection.mutable
 import ExecutionContext.Implicits.global
+import grizzled.slf4j.Logger
 
 case class Session(name:String)
 
@@ -22,11 +23,14 @@ trait SessionDaoComponentApi {
 trait SessionDaoComponent extends SessionDaoComponentApi{
   self:DatabaseComponentServiceApi with AsyncSupport =>
 
+  private[this] val logger = Logger(classOf[SessionDaoComponent])
+
   lazy val sessionDao: SessionDaoApi = new SessionDaoApi {
     def updateSessionFields(sid: UUID, updatedFields: Map[String, String]): Future[Unit] = {
       val list =
         for (field <- updatedFields) yield {
-          for (x <- databaseServiceApi.query("insert into session_store(sid, sikey, value) values (?,?,?)",
+          for (x <- databaseServiceApi.query(
+            "insert into session_store(sid, sikey, value) values (?,?,?) USING TTL 10800",
             sid, field._1, field._2
           )) yield {
             x
@@ -49,7 +53,7 @@ trait SessionDaoComponent extends SessionDaoComponentApi{
         val map = result.map{row=>
           (row.getString("sikey"),row.getString("value"))
         }.toList.toMap
-        println("Session: "+map)
+        logger.debug("Session: "+map)
         map
       }
     }

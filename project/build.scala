@@ -6,6 +6,9 @@ import com.mojolly.scalate.ScalatePlugin._
 import ScalateKeys._
 import com.earldouglas.xsbtwebplugin.WebPlugin.webSettings
 
+import sbtassembly.Plugin._
+import AssemblyKeys._
+
 object JstestBuild extends Build {
   val Organization = "com.ipetruk.jstest"
   val Name = "jstest"
@@ -16,7 +19,7 @@ object JstestBuild extends Build {
   lazy val project = Project (
     "jstest",
     file("."),
-    settings = Defaults.defaultSettings ++ scalateSettings++ webSettings ++ net.virtualvoid.sbt.graph.Plugin.graphSettings ++ Seq(
+    settings = Defaults.defaultSettings ++ scalateSettings++assemblySettings++ webSettings ++ net.virtualvoid.sbt.graph.Plugin.graphSettings ++ Seq(
       organization := Organization,
       name := Name,
       version := Version,

@@ -4,6 +4,7 @@ import com.datastax.driver.core.{Row, ResultSet, Cluster}
 import scala.collection.JavaConversions._
 import org.scalatra.{Initializable, ScalatraServlet}
 import concurrent.{Future, Promise, ExecutionContext}
+import grizzled.slf4j.Logger
 
 trait DatabaseServiceApi {
   def shutdown:Unit
@@ -12,7 +13,12 @@ trait DatabaseServiceApi {
 }
 
 trait DatabaseServiceConfig{
-  def hosts:List[String] = List("127.0.0.1")
+  def hosts:List[String] =
+    List(Option(System.getenv("OPENSHIFT_CASSANDRA_HOST")).getOrElse("127.0.0.1"))
+
+  def port:Int = Option(System.getenv("OPENSHIFT_CASSANDRA_PORT"))
+    .map(i=>java.lang.Integer.parseInt(i))
+    .getOrElse(9042)
 
   def keyspace: String
 }
@@ -30,14 +36,6 @@ class IterableResultSet(rs:ResultSet){
   def map[A](f: Row=>A):Stream[A]={
     import Stream._
 
-//    println("StartingAll")
-//
-//    val list = (for (row <- rs.all()) yield {
-//      f(row)
-//    }).toList
-//    println("Ending all")
-//
-//    list
     val iterator = rs.iterator()
 
     def nextItemStream:Stream[A] =
@@ -52,7 +50,7 @@ class IterableResultSet(rs:ResultSet){
 
 trait CassandraDatabaseServiceComponent extends DatabaseComponentServiceApi with Initializable{
 
-  private[this] val executor = ExecutionContext.Implicits.global
+  private[this] val logger = Logger(classOf[CassandraDatabaseServiceComponent])
 
   lazy val databaseServiceApi: DatabaseServiceApi = new DatabaseServiceApi{
     val (cluster, session) = {
@@ -62,17 +60,17 @@ trait CassandraDatabaseServiceComponent extends DatabaseComponentServiceApi with
         .build()
       val session = cluster.connect(databaseServiceConfig.keyspace)
       val metadata = cluster.getMetadata();
-      System.out.printf("Connected to cluster: %s\n",
-        metadata.getClusterName());
+      logger.info("Connected to cluster: %s".format(
+        metadata.getClusterName()));
       for (host <- metadata.getAllHosts()) {
-        System.out.printf("Datacenter: %s; Host: %s; Rack: %s\n",
-          host.getDatacenter(), host.getAddress(), host.getRack());
+        logger.info("Datacenter: %s; Host: %s; Rack: %s".format(
+          host.getDatacenter(), host.getAddress(), host.getRack()));
       }
       (cluster, session)
     }
 
     def query(cql:String, args:AnyRef*)={
-      println(cql, args.toList)
+      logger.debug("CQL: "+cql+", args:"+args.toList)
       val preparedQuery = session.prepare(cql)
       val bound = preparedQuery.bind(args:_*)
       val result = session.executeAsync(bound)
@@ -97,7 +95,7 @@ trait CassandraDatabaseServiceComponent extends DatabaseComponentServiceApi with
     }
 
     def shutdown{
-      println("Shutting down "+(cluster,session))
+      logger.info("Shutting down "+(cluster,session))
       session.shutdown()
       cluster.shutdown()
     }

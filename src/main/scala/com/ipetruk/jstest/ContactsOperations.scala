@@ -12,6 +12,8 @@ trait ContactsOperations {
   self:  AppStack with AuthenticationOperations with DatabaseComponentServiceApi =>
 
   delete("/contactsService/groups/:id"){
+    assertCSRF
+
     val gid = params("id")
 
     asyncAuth { session =>
@@ -21,6 +23,8 @@ trait ContactsOperations {
   }
 
   post("/contactsService/groups"){
+    assertCSRF
+
     val bodyGroup = parsedBody.extract[ContactGroup]
     val updatedGroup = bodyGroup.copy(
       gid = Some(bodyGroup.gid.getOrElse(UUID.randomUUID().toString))
@@ -34,6 +38,8 @@ trait ContactsOperations {
   }
 
   delete("/contactsService/contacts/:id"){
+    assertCSRF
+
     val cid = params("id")
 
     asyncAuth { session =>
@@ -43,6 +49,8 @@ trait ContactsOperations {
   }
 
   post("/contactsService/contacts"){
+    assertCSRF
+
     val bodyContact = parsedBody.extract[Contact]
     val updatedContact = bodyContact.copy(
       cid = Some(bodyContact.cid.getOrElse(UUID.randomUUID().toString))
@@ -61,6 +69,8 @@ trait ContactsOperations {
   }
 
   get("/contactsService/all"){
+    assertCSRF
+
     contentType = formats("json")
     asyncAuth{ session =>
       val res = for {

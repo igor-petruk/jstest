@@ -101,6 +101,14 @@ Authenticator.prototype.register =  function(config){
             if (config.onWatch){
                 config.onWatch();
             }
+        }).
+        error(function(data, status, headers){
+            if (status==403){
+                self.ensureWatch();
+                if (config.onWatch){
+                    config.onWatch();
+                }
+            }
         });
 };
 
