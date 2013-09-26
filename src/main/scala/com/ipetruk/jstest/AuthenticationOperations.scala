@@ -50,7 +50,7 @@ trait AuthenticationOperations {
 
   private def asyncPost[A](url:String, params:Map[String,String])(implicit
                                                           formats: Formats, mf: scala.reflect.Manifest[A]):Future[A]={
-    logger.debug("Posting "+url+":"+params)
+    //logger.debug("Posting "+url+":"+params)
     val f = dispatch.Http((dispatch.url(url).POST << params) OK as.String).map{str=>
       Extraction.extract(readJsonFromBody(str))(formats, mf)}
     for (e<-f.failed){
@@ -62,7 +62,14 @@ trait AuthenticationOperations {
   def getSid = cookies.get(sidCookieName)
 
   def provideCSRFCookieValue = {
-    Base64.encode(secureRandom.generateSeed(64))
+    synchronized{
+      logger.debug("Generating CSRF token...")
+      val bytes = Array.ofDim[Byte](128)
+      secureRandom.nextBytes(bytes)
+      val r = Base64.encode(bytes)
+      logger.debug("Done CSRF: "+r) // Should not be logged in real life
+      r
+    }
   }
 
   def reverseOption[T](i:Option[Future[T]]):Future[Option[T]]={
@@ -146,12 +153,12 @@ trait AuthenticationOperations {
           "https://verifier.login.persona.org/verify",
           Map(
             "assertion"->assertion.value,
-            "audience"->"http://146.185.128.148:8080/"
+          "audience"->"http://146.185.128.148:8080/"
 //            "audience"->"http://localhost:8080/"
           )
-        ).flatMap{ response =>
+        ).flatMap{ personaResponse =>
           logger.debug("Got response"+response)
-          response match {
+          personaResponse match {
             case r: ValidationResponse if r.status=="okay" => {
               logger.debug("Status good")
               val newEmail = r.email.get;
@@ -193,14 +200,15 @@ trait AuthenticationOperations {
                 sessionDao.updateSessionFields(sid, Map(
                   "uid"->newEmail
                 ))
-                cookies += (sidCookieName -> sid.toString)
-                cookies += (csrfCookieName -> provideCSRFCookieValue)
-                ValidationClientResponse(email = response.email)
+                val csrfProvided = provideCSRFCookieValue
+                cookies+=(sidCookieName->sid.toString)
+                cookies+=(csrfCookieName->csrfProvided)
+                ValidationClientResponse(email = personaResponse.email)
               }
             }
             case other: ValidationResponse => {
               logger.debug("Invalid "+other)
-              future(ValidationClientResponse(error = response.reason))
+              future(ValidationClientResponse(error = personaResponse.reason))
             }
           }
         }
