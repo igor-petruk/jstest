@@ -32,8 +32,6 @@ function ContactsController($scope, contacts, $timeout, $http){
 
     contacts.setOnRefreshListener(function (data){
         $scope.groups = data.groups;
-        //self.allContacts = data.contacts;
-        console.log("Refreshed to "+JSON.stringify(data))
     });
 
     $scope.sortedContacts = function(){

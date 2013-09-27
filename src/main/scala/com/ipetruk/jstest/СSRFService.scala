@@ -4,6 +4,7 @@ import org.scalatra.{ScalatraServlet, CookieContext}
 import java.security.SecureRandom
 import com.ning.http.util.Base64
 import grizzled.slf4j.Logger
+import javax.servlet.http.Cookie
 
 trait СSRFServiceApi {
   def assertNoCSRF:Unit
@@ -53,7 +54,9 @@ trait CSRFServiceComponent extends CSRFServiceComponentApi{
     }
 
     def injectCSRFCookie {
-      cookies+=(csrfCookieName->provideCSRFCookieValue)
+      val cookie = new Cookie(csrfCookieName,provideCSRFCookieValue)
+      cookie.setPath("/")
+      response.addCookie(cookie)
     }
   }
 }

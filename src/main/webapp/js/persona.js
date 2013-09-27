@@ -12,7 +12,6 @@ function AuthController($scope, authenticator, contacts){
     }
 
     $scope.init = function(){
-        console.log("Calling register");
         authenticator.register({
             onWatch: function(){
                 var signinLink = document.getElementById('signin');
@@ -26,17 +25,14 @@ function AuthController($scope, authenticator, contacts){
                 }
             },
             onLogin: function(username){
-                console.log("Logged in "+username);
                 $scope.loggedIn = true;
                 $scope.currentUser = username;
                 contacts.refresh();
             },
             onLogout: function(){
                 safeApply( function(){
-                    console.log("Logged out");
                     $scope.loggedIn = false;
                     $scope.currentUser = "(no user)";
-                    console.log(contacts)
                     contacts.reset();
                 });
             }
@@ -56,7 +52,6 @@ Authenticator.prototype.ensureWatch = function(){
         navigator.id.watch({
     //                    loggedInUser: currentUser,
             onlogin: function(assertion) {
-                console.log("Got assertion "+assertion)
                 var assertionObj = {
                     value:assertion
                 }
@@ -90,7 +85,6 @@ Authenticator.prototype.register =  function(config){
     this.$http.get('/rest/auth/currentUser').
         success(function(data, status, headers) {
             var currentUser = (data)?data:null;
-            console.log("Got user: "+currentUser)
             if (currentUser){
                 self.loggedIn = true;
                 if (config.onLogin)

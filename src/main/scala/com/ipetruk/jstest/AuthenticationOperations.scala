@@ -6,9 +6,8 @@ import dispatch.{as}
 import org.scalatra.{AsyncResult}
 
 import java.util.UUID
-import java.security.SecureRandom
-import com.ning.http.util.Base64
 import grizzled.slf4j.Logger
+import javax.servlet.http.Cookie
 
 case class Assertion(value: String)
 
@@ -19,7 +18,10 @@ case class ValidationResponse(status: String,
 case class ValidationClientResponse(email: Option[String] = None,error: Option[String] = None)
 
 trait AuthenticationOperations {
-  self:  AppStack with SessionDaoComponentApi with CSRFServiceComponentApi =>
+  self:  AppStack
+    with SessionDaoComponentApi
+    with CSRFServiceComponentApi
+    with JNDISupport =>
 
   implicit private[this] val executor = ExecutionContext.Implicits.global
   private[this] val logger = Logger(classOf[AuthenticationOperations])
@@ -116,12 +118,18 @@ trait AuthenticationOperations {
     new AsyncResult {
       val is = {
         logger.debug("Running async post")
+
+        val jndiSelfHost = Option(readJndi("app.host").asInstanceOf[String])
+
+        val selfHost = jndiSelfHost.getOrElse( "http://localhost:8080/")
+
+        logger.debug(s"Self host: $selfHost")
+
         asyncPost[ValidationResponse](
           "https://verifier.login.persona.org/verify",
           Map(
             "assertion"->assertion.value,
-          "audience"->"http://146.185.128.148:8080/"
-//            "audience"->"http://localhost:8080/"
+            "audience"->selfHost
           )
         ).flatMap{ personaResponse =>
           logger.debug("Got response"+response)
@@ -159,6 +167,7 @@ trait AuthenticationOperations {
                 }
               }
               for (e <- sidFuture.failed) yield {
+                logger.warn("Error in session future",e)
                 e.printStackTrace()
               }
 
@@ -167,9 +176,14 @@ trait AuthenticationOperations {
                 sessionDao.updateSessionFields(sid, Map(
                   "uid"->newEmail
                 ))
-                cookies+=(sidCookieName->sid.toString)
+                val cookie = new Cookie(sidCookieName,sid.toString)
+                cookie.setPath("/")
+                response.addCookie(cookie)
                 csrfService.injectCSRFCookie
-                ValidationClientResponse(email = personaResponse.email)
+                logger.debug("Coookies configured ")
+                val vr = ValidationClientResponse(email = personaResponse.email)
+                logger.debug("Login ok "+vr)
+                vr
               }
             }
             case other: ValidationResponse => {

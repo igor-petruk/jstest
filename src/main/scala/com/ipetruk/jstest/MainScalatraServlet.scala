@@ -5,6 +5,7 @@ import java.util.UUID
 class MainScalatraServlet extends AppStack
 with CSRFServiceComponent
 with CassandraDatabaseServiceComponent
+with JNDISupport
 with AuthenticationOperations
 with SessionDaoComponent
 with ContactsOperations{
