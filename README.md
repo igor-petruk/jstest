@@ -32,8 +32,6 @@ JS/Scala App for JS Course
 
 3. Add {your cassandra dir}/bin to $PATH
 
-4.
-
 ```sh
 $ cassandra
 $ cd jstest
