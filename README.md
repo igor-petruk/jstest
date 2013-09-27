@@ -22,6 +22,8 @@ JS/Scala App for JS Course
 
 2. Separation of user id from email
 
+3. Better validation
+
 ## Build & Run ##
 
 1. Install SBT
